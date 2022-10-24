@@ -3,5 +3,6 @@ resource "aws_vpc" "secondary_vpc" {
     provider = aws.secondary_region
     tags = {
         Name = "${var.env}-secondary_region"
+        Name = format("%s-vpc" , var.env)
     }
 }
