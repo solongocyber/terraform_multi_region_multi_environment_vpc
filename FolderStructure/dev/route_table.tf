@@ -28,6 +28,24 @@ resource "aws_nat_gateway" "nat_gateway" {
     Name = "${var.env}-nat_gateway"
   }
 }
+resource "aws_route_table" "private_rt" {
+    vpc_id = aws_vpc.multi_region_vpc.id
+    
+    route {
+        cidr_block = var.rt_cidr
+        nat_gateway_id = aws_nat_gateway.nat_gateway.id
+    }
+    tags = {
+        Name = "${var.env}-private_rt"
+    }
+}
+
+resource "aws_route_table_association" "private_rt" {
+    count = length(var.private_subnet)
+    subnet_id = element(aws_subnet.private_subnet.*.id, count.index)
+    route_table_id = aws_route_table.private_rt.id
+
+}
 
 
 resource "aws_route_table" "public_rt_secondary_region" {
@@ -48,6 +66,27 @@ resource "aws_route_table_association" "public_rt_secondary_region" {
     count = length(var.pub_subnet)
     subnet_id = element(aws_subnet.pub_subnet_secondary_region.*.id, count.index)
     route_table_id = aws_route_table.public_rt_secondary_region.id
+
+}
+
+resource "aws_route_table" "private_rt_secondary_region" {
+    provider = aws.secondary_region
+    vpc_id = aws_vpc.secondary_vpc.id
+    
+    route {
+        cidr_block = var.rt_cidr
+        nat_gateway_id = aws_nat_gateway.nat.id
+    }
+    tags = {
+        Name = "${var.env}-private_rt"
+    }
+}
+
+resource "aws_route_table_association" "private_rt_secondary_region" {
+    provider = aws.secondary_region
+    count = length(var.private_subnet)
+    subnet_id = element(aws_subnet.private_subnet_secondary_region.*.id, count.index)
+    route_table_id = aws_route_table.private_rt_secondary_region.id
 
 }
 
